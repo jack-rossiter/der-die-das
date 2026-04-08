@@ -7,6 +7,7 @@
 
   const QUEUE_KEY = "timekeeper_queue";
   const HISTORY_KEY = "timekeeper_history";
+  const LOG_KEY = "timekeeper_log";
   const MAX_CHIPS = 5;
 
   // ── DOM refs ───────────────────────────────────────────────────
@@ -220,6 +221,71 @@
     updatePendingBadge();
   }
 
+  // ── Daily log (localStorage) ────────────────────────────────────
+  function getLog() {
+    try {
+      return JSON.parse(localStorage.getItem(LOG_KEY)) || [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveLog(log) {
+    try {
+      localStorage.setItem(LOG_KEY, JSON.stringify(log));
+    } catch (_) {}
+  }
+
+  function recordEntry(entry) {
+    var log = getLog();
+    log.push({ date: entry.date, start: entry.start, end: entry.end, description: entry.description });
+    saveLog(log);
+  }
+
+  function todayEntries() {
+    var today = dateEl.value || new Date().toISOString().slice(0, 10);
+    return getLog().filter(function (e) { return e.date === today; });
+  }
+
+  var todayBtn = document.getElementById("today-btn");
+  var todayListEl = document.getElementById("today-list");
+
+  function renderTodayList() {
+    var entries = todayEntries();
+    todayListEl.innerHTML = "";
+    if (entries.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "today-empty";
+      empty.textContent = "No entries today";
+      todayListEl.appendChild(empty);
+    } else {
+      entries.sort(function (a, b) { return a.start.localeCompare(b.start); });
+      entries.forEach(function (e) {
+        var row = document.createElement("div");
+        row.className = "today-entry";
+        var time = document.createElement("span");
+        time.className = "today-time";
+        time.textContent = e.start + "\u2013" + e.end;
+        var desc = document.createElement("span");
+        desc.className = "today-desc";
+        desc.textContent = e.description;
+        row.appendChild(time);
+        row.appendChild(desc);
+        todayListEl.appendChild(row);
+      });
+    }
+  }
+
+  todayBtn.addEventListener("click", function () {
+    var isOpen = todayListEl.classList.contains("open");
+    if (isOpen) {
+      todayListEl.classList.remove("open");
+    } else {
+      renderTodayList();
+      todayListEl.classList.add("open");
+    }
+  });
+
   // ── Toast ──────────────────────────────────────────────────────
   var toastTimer = null;
   function showToast(msg, isError) {
@@ -265,19 +331,23 @@
     try {
       await postEntry(entry);
       recordActivity(entry.project, entry.description);
+      recordEntry(entry);
       showToast("Logged!");
       descEl.value = "";
       clearTimePicker("start");
       clearTimePicker("end");
       renderChips();
+      if (todayListEl.classList.contains("open")) renderTodayList();
     } catch (_) {
       enqueue(entry);
       recordActivity(entry.project, entry.description);
+      recordEntry(entry);
       showToast("Saved offline — will sync later", true);
       descEl.value = "";
       clearTimePicker("start");
       clearTimePicker("end");
       renderChips();
+      if (todayListEl.classList.contains("open")) renderTodayList();
     }
 
     submitBtn.disabled = false;
