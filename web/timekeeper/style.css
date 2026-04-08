@@ -117,33 +117,55 @@ input::placeholder {
   color: var(--text-muted);
 }
 
-.time-row {
-  display: flex;
-  gap: 12px;
-}
-
-.time-field {
-  flex: 1;
+.time-picker {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.hour-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
 }
 
-.time-selects {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.minute-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 
-.time-selects select {
-  flex: 1;
-  min-width: 0;
+.hour-grid button,
+.minute-grid button {
+  padding: 10px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.time-sep {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-muted);
+.hour-grid button:hover,
+.minute-grid button:hover {
+  border-color: var(--accent);
+}
+
+.hour-grid button.selected,
+.minute-grid button.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.time-display {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 4px 0;
 }
 
 /* Activity chips */

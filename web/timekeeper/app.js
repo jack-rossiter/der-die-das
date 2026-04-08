@@ -13,10 +13,12 @@
   const form = document.getElementById("entry-form");
   const projectEl = document.getElementById("project");
   const dateEl = document.getElementById("date");
-  const startH = document.getElementById("start-h");
-  const startM = document.getElementById("start-m");
-  const endH = document.getElementById("end-h");
-  const endM = document.getElementById("end-m");
+  const startHoursEl = document.getElementById("start-hours");
+  const startMinsEl = document.getElementById("start-minutes");
+  const startDisplayEl = document.getElementById("start-display");
+  const endHoursEl = document.getElementById("end-hours");
+  const endMinsEl = document.getElementById("end-minutes");
+  const endDisplayEl = document.getElementById("end-display");
   const descEl = document.getElementById("description");
   const chipsEl = document.getElementById("chips");
   const submitBtn = document.getElementById("submit-btn");
@@ -33,34 +35,73 @@
   // ── Default date to today ──────────────────────────────────────
   dateEl.value = new Date().toISOString().slice(0, 10);
 
-  // ── Populate time dropdowns (hours 0-23, minutes 00/15/30/45) ─
+  // ── Time picker (tappable button grids) ─────────────────────────
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
 
-  [startH, endH].forEach(function (sel) {
-    for (var h = 0; h < 24; h++) {
-      var opt = document.createElement("option");
-      opt.value = pad(h);
-      opt.textContent = pad(h);
-      sel.appendChild(opt);
+  var timePickers = {
+    start: { hour: null, minute: null, hoursEl: startHoursEl, minsEl: startMinsEl, displayEl: startDisplayEl },
+    end:   { hour: null, minute: null, hoursEl: endHoursEl,   minsEl: endMinsEl,   displayEl: endDisplayEl },
+  };
+
+  function updateTimeDisplay(picker) {
+    var p = timePickers[picker];
+    if (p.hour !== null && p.minute !== null) {
+      p.displayEl.textContent = pad(p.hour) + ":" + pad(p.minute);
+    } else if (p.hour !== null) {
+      p.displayEl.textContent = pad(p.hour) + ":--";
+    } else {
+      p.displayEl.textContent = "--:--";
     }
-  });
-
-  [startM, endM].forEach(function (sel) {
-    [0, 15, 30, 45].forEach(function (m) {
-      var opt = document.createElement("option");
-      opt.value = pad(m);
-      opt.textContent = pad(m);
-      sel.appendChild(opt);
-    });
-  });
-
-  function getTime(hSel, mSel) {
-    return hSel.value + ":" + mSel.value;
   }
 
-  function clearTime(hSel, mSel) {
-    hSel.selectedIndex = 0;
-    mSel.selectedIndex = 0;
+  function buildGrid(picker) {
+    var p = timePickers[picker];
+
+    for (var h = 8; h <= 20; h++) {
+      (function (hour) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = pad(hour);
+        btn.addEventListener("click", function () {
+          p.hoursEl.querySelectorAll("button").forEach(function (b) { b.classList.remove("selected"); });
+          btn.classList.add("selected");
+          p.hour = hour;
+          updateTimeDisplay(picker);
+        });
+        p.hoursEl.appendChild(btn);
+      })(h);
+    }
+
+    [0, 15, 30, 45].forEach(function (min) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = pad(min);
+      btn.addEventListener("click", function () {
+        p.minsEl.querySelectorAll("button").forEach(function (b) { b.classList.remove("selected"); });
+        btn.classList.add("selected");
+        p.minute = min;
+        updateTimeDisplay(picker);
+      });
+      p.minsEl.appendChild(btn);
+    });
+  }
+
+  buildGrid("start");
+  buildGrid("end");
+
+  function getTime(picker) {
+    var p = timePickers[picker];
+    if (p.hour === null || p.minute === null) return "";
+    return pad(p.hour) + ":" + pad(p.minute);
+  }
+
+  function clearTimePicker(picker) {
+    var p = timePickers[picker];
+    p.hour = null;
+    p.minute = null;
+    p.hoursEl.querySelectorAll("button").forEach(function (b) { b.classList.remove("selected"); });
+    p.minsEl.querySelectorAll("button").forEach(function (b) { b.classList.remove("selected"); });
+    updateTimeDisplay(picker);
   }
 
   // ── Activity history (per-project frequency map) ───────────────
@@ -198,13 +239,17 @@
     var entry = {
       project: projectEl.value,
       date: dateEl.value,
-      start: getTime(startH, startM),
-      end: getTime(endH, endM),
+      start: getTime("start"),
+      end: getTime("end"),
       description: descEl.value.trim(),
       submitted_at: new Date().toISOString(),
     };
 
     if (!entry.description) return;
+    if (!entry.start || !entry.end) {
+      showToast("Select start and end times", true);
+      return;
+    }
 
     submitBtn.disabled = true;
 
@@ -222,16 +267,16 @@
       recordActivity(entry.project, entry.description);
       showToast("Logged!");
       descEl.value = "";
-      clearTime(startH, startM);
-      clearTime(endH, endM);
+      clearTimePicker("start");
+      clearTimePicker("end");
       renderChips();
     } catch (_) {
       enqueue(entry);
       recordActivity(entry.project, entry.description);
       showToast("Saved offline — will sync later", true);
       descEl.value = "";
-      clearTime(startH, startM);
-      clearTime(endH, endM);
+      clearTimePicker("start");
+      clearTimePicker("end");
       renderChips();
     }
 

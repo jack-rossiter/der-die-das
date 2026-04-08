@@ -23,23 +23,18 @@
       <label for="date">Date</label>
       <input id="date" type="date" required>
 
-      <div class="time-row">
-        <div class="time-field">
-          <label for="start-h">Start</label>
-          <div class="time-selects">
-            <select id="start-h" required></select>
-            <span class="time-sep">:</span>
-            <select id="start-m" required></select>
-          </div>
-        </div>
-        <div class="time-field">
-          <label for="end-h">End</label>
-          <div class="time-selects">
-            <select id="end-h" required></select>
-            <span class="time-sep">:</span>
-            <select id="end-m" required></select>
-          </div>
-        </div>
+      <div class="time-picker">
+        <label>Start</label>
+        <div class="hour-grid" id="start-hours"></div>
+        <div class="minute-grid" id="start-minutes"></div>
+        <div class="time-display" id="start-display">--:--</div>
+      </div>
+
+      <div class="time-picker">
+        <label>End</label>
+        <div class="hour-grid" id="end-hours"></div>
+        <div class="minute-grid" id="end-minutes"></div>
+        <div class="time-display" id="end-display">--:--</div>
       </div>
 
       <label for="description">Description</label>
