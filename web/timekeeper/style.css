@@ -129,6 +129,23 @@ input::placeholder {
   gap: 6px;
 }
 
+.time-selects {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-selects select {
+  flex: 1;
+  min-width: 0;
+}
+
+.time-sep {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 /* Activity chips */
 .chips {
   display: flex;

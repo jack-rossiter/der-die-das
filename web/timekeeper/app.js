@@ -13,8 +13,10 @@
   const form = document.getElementById("entry-form");
   const projectEl = document.getElementById("project");
   const dateEl = document.getElementById("date");
-  const startEl = document.getElementById("start");
-  const endEl = document.getElementById("end");
+  const startH = document.getElementById("start-h");
+  const startM = document.getElementById("start-m");
+  const endH = document.getElementById("end-h");
+  const endM = document.getElementById("end-m");
   const descEl = document.getElementById("description");
   const chipsEl = document.getElementById("chips");
   const submitBtn = document.getElementById("submit-btn");
@@ -30,6 +32,36 @@
 
   // ── Default date to today ──────────────────────────────────────
   dateEl.value = new Date().toISOString().slice(0, 10);
+
+  // ── Populate time dropdowns (hours 0-23, minutes 00/15/30/45) ─
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+  [startH, endH].forEach(function (sel) {
+    for (var h = 0; h < 24; h++) {
+      var opt = document.createElement("option");
+      opt.value = pad(h);
+      opt.textContent = pad(h);
+      sel.appendChild(opt);
+    }
+  });
+
+  [startM, endM].forEach(function (sel) {
+    [0, 15, 30, 45].forEach(function (m) {
+      var opt = document.createElement("option");
+      opt.value = pad(m);
+      opt.textContent = pad(m);
+      sel.appendChild(opt);
+    });
+  });
+
+  function getTime(hSel, mSel) {
+    return hSel.value + ":" + mSel.value;
+  }
+
+  function clearTime(hSel, mSel) {
+    hSel.selectedIndex = 0;
+    mSel.selectedIndex = 0;
+  }
 
   // ── Activity history (per-project frequency map) ───────────────
   function getHistory() {
@@ -166,8 +198,8 @@
     var entry = {
       project: projectEl.value,
       date: dateEl.value,
-      start: startEl.value,
-      end: endEl.value,
+      start: getTime(startH, startM),
+      end: getTime(endH, endM),
       description: descEl.value.trim(),
       submitted_at: new Date().toISOString(),
     };
@@ -190,16 +222,16 @@
       recordActivity(entry.project, entry.description);
       showToast("Logged!");
       descEl.value = "";
-      startEl.value = "";
-      endEl.value = "";
+      clearTime(startH, startM);
+      clearTime(endH, endM);
       renderChips();
     } catch (_) {
       enqueue(entry);
       recordActivity(entry.project, entry.description);
       showToast("Saved offline — will sync later", true);
       descEl.value = "";
-      startEl.value = "";
-      endEl.value = "";
+      clearTime(startH, startM);
+      clearTime(endH, endM);
       renderChips();
     }
 
